@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A gift for you💐</title>
+<link href="https://fonts.googleapis.com/css2?family=Alex+Brush&display=swap" rel="stylesheet">
+<style>
+:root {
+  --petal-color-light: #ff6482;
+  --petal-color-dark: #d62463;
+  --card-bg: rgba(255, 240, 245, 0.92);
+  --card-border: rgba(255, 160, 176, 0.8);
+  --accent-color: #b5179e;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  font-family: 'Alex Brush', cursive;
+  background: radial-gradient(circle at center, #fff5f7 0%, #ffe0eb 60%, #ffc2d1 100%);
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* -------------------- 0. MÀN HÌNH MỞ ĐẦU (Nút Duy Nhất) -------------------- */
+#coverScreen {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at center, #fff5f7 0%, #ffe0eb 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 11; 
+  transition: opacity 1s ease;
+}
+#btnReveal {
+  background: linear-gradient(135deg, #a82084, #d62463);
+  color: white;
+  border: none;
+  padding: 20px 50px;
+  font-size: 30px;
+  font-family: 'Alex Brush', cursive;
+  border-radius: 15px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: background 0.3s, transform 0.2s;
+}
+#btnReveal:hover {
+  background: linear-gradient(135deg, #702963, #a82084);
+  transform: scale(1.05);
+}
+
+
+/* -------------------- 1. MÀN HÌNH LỜI DẪN/LOADING (Và Khóa) -------------------- */
+#loadingScreen {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at center, #fff5f7 0%, #ffe0eb 100%);
+  display: none; 
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 10; 
+  text-align: center;
+  opacity: 0; 
+  transition: opacity 1s ease;
+}
+#loadingScreen.active {
+    display: flex;
+    opacity: 1;
+}
+#introText {
+  font-size: 36px;
+  color: var(--accent-color);
+  font-weight: bold;
+}
+/* Style cho input và nút verify */
+#recipientName {
+    padding: 10px;
+    margin-top: 20px;
+    font-size: 18px;
+    border: 2px solid var(--accent-color);
+    border-radius: 8px;
+    text-align: center;
+    font-family: sans-serif;
+    outline: none;
+    transition: border-color 0.3s;
+}
+#recipientName:focus {
+    border-color: #ff4d6d;
+}
+#btnVerify {
+    margin-top: 15px;
+    background: linear-gradient(135deg, #00b894, #55efc4);
+    color: white;
+    border: none;
+    padding: 10px 30px;
+    font-size: 20px;
+    font-family: 'Alex Brush', cursive;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: background 0.3s;
+}
+#btnVerify:hover {
+    background: linear-gradient(135deg, #00947a, #00b894);
+}
+/* Style cho nút Start */
+#btnStart {
+  margin-top: 30px;
+  background: linear-gradient(135deg, #ff4d6d, #ff85a1);
+  color: white;
+  border: none;
+  padding: 15px 40px;
+  font-size: 24px;
+  font-family: 'Alex Brush', cursive;
+  border-radius: 15px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  transition: background 0.3s, transform 0.2s;
+}
+#btnStart:hover {
+  background: linear-gradient(135deg, #c9184a, #ff4d6d);
+  transform: scale(1.05);
+}
+
+/* --- KEYFRAMES CHO XOAY LIÊN TỤC --- */
+@keyframes rotateSlowly {
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* -------------------- 2. HIỆU ỨNG HOA HỒNG NỞ -------------------- */
+.rose {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  animation: rotateSlowly 30s linear infinite; 
+  z-index: 2;
+}
+.rose.start-animation {
+  animation: bloom 1s ease-in-out forwards, rotateSlowly 30s linear infinite paused; 
+}
+.petal {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle at center, var(--petal-color-light) 0%, var(--petal-color-dark) 80%);
+  border-radius: 50% 50% 0 50%;
+  transform-origin: bottom right;
+  opacity: 0;
+  transform: rotate(var(--rot, 0deg)); 
+}
+.petal.start-animation {
+    animation: openPetal 1s forwards;
+}
+
+@keyframes openPetal {
+  0% { opacity: 0; transform: scale(0) rotate(var(--rot)); }
+  100% { opacity: 1; transform: scale(1) rotate(var(--rot)); }
+}
+@keyframes bloom {
+  0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+  60% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+/* --- HIỆU ỨNG CÁNH HOA BAY (DRIFTING PETALS) --- */
+.drifting-petal {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: var(--petal-color-light);
+    border-radius: 50%;
+    opacity: 0;
+    z-index: 2;
+    animation: drift 2.5s ease-out forwards;
+}
+
+@keyframes drift {
+    0% { opacity: 0.8; transform: translate(0, 0) rotate(0deg) scale(0.5); }
+    100% { opacity: 0; transform: translate(var(--dx), var(--dy)) rotate(var(--deg)) scale(1); }
+}
+
+/* --- HIỆU ỨNG KHI HOA NỞ XONG (Sparkle/Light Ray) --- */
+.sparkle-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    border: 2px solid white;
+    border-radius: 50%;
+    animation: sparkleRingEffect 1s ease-out forwards;
+    z-index: 2;
+}
+@keyframes sparkleRingEffect {
+    0% { transform: translate(-50%, -50%) scale(0); opacity: 1; border-width: 2px;}
+    100% { transform: translate(-50%, -50%) scale(2); opacity: 0; border-width: 0px; width: 100px; height: 100px;}
+}
+.tiny-sparkle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background-color: #fff;
+    border-radius: 50%;
+    opacity: 0;
+    animation: tinySparkleEffect 1.5s ease-out forwards;
+    z-index: 2;
+}
+@keyframes tinySparkleEffect {
+    0% { opacity: 0; transform: translate(0, 0) scale(0); }
+    30% { opacity: 1; transform: translate(var(--x, 0), var(--y, 0)) scale(1); }
+    100% { opacity: 0; transform: translate(var(--x-end, 0), var(--y-end, 0)) scale(0); }
+}
+.light-ray {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 2px;
+    height: 50px;
+    background: linear-gradient(to bottom, #fff, transparent);
+    transform-origin: top center;
+    transform: translate(-50%, -50%) rotate(var(--deg, 0deg)) scaleY(0);
+    opacity: 0;
+    animation: lightRayEffect 1s ease-out forwards;
+    z-index: 2;
+}
+@keyframes lightRayEffect {
+    0% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--deg)) scaleY(0); }
+    50% { opacity: 0.8; transform: translate(-50%, -50%) rotate(var(--deg)) scaleY(1); }
+    100% { opacity: 0; transform: translate(-50%, -50%) rotate(var(--deg)) scaleY(0); }
+}
+
+
+/* -------------------- 3. THIỆP CHÚC MỪNG -------------------- */
+.card {
+  position: absolute;
+  width: 420px;
+  height: 300px;
+  background: var(--card-bg);
+  border: 2px solid var(--card-border);
+  border-radius: 20px;
+  box-shadow: 0 10px 45px rgba(0,0,0,0.15);
+  text-align: center;
+  padding: 40px;
+  transform: translateY(50px) scale(0);
+  opacity: 0;
+  z-index: 3;
+}
+.card.show-card {
+  animation: showCard 1.5s 3.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards; 
+  backdrop-filter: blur(8px);
+}
+
+@keyframes showCard {
+  0% { transform: translateY(50px) scale(0); opacity: 0; }
+  60% { transform: translateY(-10px) scale(1.05); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+/* --- HIỆU ỨNG MÂY HỒNG KHI THIỆP MỞ --- */
+.pink-cloud {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%) scale(0);
+    width: 200px;
+    height: 100px;
+    background: radial-gradient(ellipse at center, rgba(255, 192, 203, 0.7) 0%, rgba(255, 192, 203, 0) 70%);
+    border-radius: 50%;
+    animation: cloudEffect 2s ease-out forwards;
+    opacity: 0;
+    z-index: 2;
+}
+@keyframes cloudEffect {
+    0% { transform: translateX(-50%) scale(0); opacity: 0; bottom: 0; }
+    30% { transform: translateX(-50%) scale(1.2); opacity: 0.7; }
+    100% { transform: translateX(-50%) scale(1); opacity: 0; bottom: 150px; }
+}
+
+.card h2 {
+  color: var(--accent-color);
+  font-size: 42px;
+  text-shadow: 2px 2px 5px rgba(255, 192, 203, 0.6);
+  margin-bottom: 15px;
+  letter-spacing: 1px;
+}
+.card p {
+  font-size: 26px;
+  color: #702963;
+  line-height: 1.6em;
+  text-shadow: 1px 1px 3px rgba(255, 182, 193, 0.4);
+}
+
+/* Nút mở nhạc (Tự động ẩn sau khi nhạc bật) */
+button#btnMusic {
+  margin-top: 25px;
+  background: linear-gradient(135deg, #ff4d6d, #ff85a1);
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  font-size: 22px;
+  font-family: 'Alex Brush', cursive;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+  animation: hideButton 0.5s 5.5s forwards;
+}
+
+@keyframes hideButton {
+    to { opacity: 0; transform: scale(0); pointer-events: none; }
+}
+
+/* -------------------- 4. Hoa rơi (Rain) -------------------- */
+.flower {
+  position: fixed;
+  width: 18px;
+  height: 18px;
+  background: radial-gradient(circle, #ffafcc 40%, transparent 41%);
+  border-radius: 50%;
+  animation: fall 6s linear infinite;
+  opacity: 0.8;
+  z-index: 1;
+}
+@keyframes fall {
+  0% { transform: translateY(-10px) rotate(0deg); opacity: 0.8; }
+  100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+}
+</style>
+</head>
+<body>
+
+<div id="coverScreen">
+    <button id="btnReveal">Mở Thiệp 💌</button>
+</div>
+
+<div id="loadingScreen">
+  <div id="introText">
+    Chào mừng bạn đến với thiệp 20/10! 💖<br>
+    <small style="font-size: 18px; font-family: 'Alex Brush'; color: #a82084;">Nhập mật khẩu để xem hoa nở rực rỡ nhé.</small>
+  </div>
+  
+  <input type="text" id="recipientName" placeholder="Your birthday">
+  <button id="btnVerify">Xác nhận</button>
+
+  <button id="btnStart" style="display: none;">Bắt đầu 💐</button>
+
+</div>
+
+<div class="rose" id="rose"> 
+    <div class="petal" id="petal-1" style="--rot:0deg;"></div>
+    <div class="petal" id="petal-2" style="--rot:60deg;"></div>
+    <div class="petal" id="petal-3" style="--rot:120deg;"></div>
+    <div class="petal" id="petal-4" style="--rot:180deg;"></div>
+    <div class="petal" id="petal-5" style="--rot:240deg;"></div>
+    <div class="petal" id="petal-6" style="--rot:300deg;"></div>
+</div>
+
+<div class="pink-cloud" id="pinkCloud"></div>
+
+<div class="card" id="card">
+  <h2>Chúc Mừng Ngày Phụ Nữ Việt Nam 20/10 💖</h2>
+  <p id="wish"></p>
+  <button id="btnMusic">Mở nhạc 🎵</button>
+</div>
+
+<audio id="introBGM" loop>
+    <source src="https://www.bensound.com/bensound-music/bensound-sweet.mp3" type="audio/mpeg">
+</audio>
+
+<audio id="bgm" loop>
+  <source src="https://www.bensound.com/bensound-music/bensound-tenderness.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+// ---------- KHAI BÁO BIẾN & CẤU HÌNH ----------
+const wishes = [
+  "Chúc em luôn nhận được nhiều điều may mắn và những lời yêu thương nha🌸"
+];
+document.getElementById("wish").innerText =
+  wishes[Math.floor(Math.random() * wishes.length)];
+
+// KHAI BÁO TÊN NGƯỜI NHẬN BÍ MẬT (CHỈ ĐỔI PHẦN NÀY)
+const CORRECT_PASSWORD = "02092006"; 
+
+const coverScreen = document.getElementById("coverScreen"); 
+const btnReveal = document.getElementById("btnReveal"); 
+const loadingScreen = document.getElementById("loadingScreen");
+const recipientNameInput = document.getElementById("recipientName");
+const btnVerify = document.getElementById("btnVerify");
+const btnStart = document.getElementById("btnStart");
+const rose = document.getElementById("rose");
+const card = document.getElementById("card");
+const pinkCloud = document.getElementById("pinkCloud");
+const introBGM = document.getElementById("introBGM"); 
+const bgm = document.getElementById("bgm"); 
+const btnMusic = document.getElementById("btnMusic");
+const petals = [
+    document.getElementById("petal-1"),
+    document.getElementById("petal-2"),
+    document.getElementById("petal-3"),
+    document.getElementById("petal-4"),
+    document.getElementById("petal-5"),
+    document.getElementById("petal-6")
+];
+
+// ---------- HÀM PHÁT & DỪNG NHẠC ----------
+function playIntroMusic() {
+  introBGM.play().catch(e => {
+    console.error("Lỗi khi phát Intro BGM:", e);
+  });
+}
+
+function playCardMusic() {
+  bgm.play().catch(() => {
+    // Xử lý khi trình duyệt chặn tự động phát
+    alert("Trình duyệt đã chặn tự động phát nhạc! Vui lòng bấm vào nút 'Mở nhạc 🎵' để kích hoạt.");
+    btnMusic.style.opacity = 1; 
+    btnMusic.style.pointerEvents = 'auto';
+    btnMusic.removeEventListener('click', playCardMusic); 
+    btnMusic.addEventListener('click', () => { 
+        bgm.play().catch(() => {});
+        btnMusic.style.display = 'none';
+    });
+  });
+}
+
+function stopIntroMusic() {
+    introBGM.pause();
+    introBGM.currentTime = 0; 
+}
+
+// ---------- HÀM TẠO HIỆU ỨNG (Giữ nguyên) ----------
+function createFlowerCompletionEffects() {
+    const roseRect = rose.getBoundingClientRect();
+    const centerX = roseRect.left + roseRect.width / 2;
+    const centerY = roseRect.top + roseRect.height / 2;
+
+    const sparkleRing = document.createElement("div");
+    sparkleRing.classList.add("sparkle-ring");
+    sparkleRing.style.left = `${centerX}px`;
+    sparkleRing.style.top = `${centerY}px`;
+    document.body.appendChild(sparkleRing);
+    setTimeout(() => sparkleRing.remove(), 1000);
+
+    for (let i = 0; i < 5; i++) {
+        const tinySparkle = document.createElement("div");
+        tinySparkle.classList.add("tiny-sparkle");
+        tinySparkle.style.left = `${centerX}px`;
+        tinySparkle.style.top = `${centerY}px`;
+        const angle = Math.random() * Math.PI * 2;
+        const radius = 30 + Math.random() * 20;
+        tinySparkle.style.setProperty('--x', `${Math.cos(angle) * radius}px`);
+        tinySparkle.style.setProperty('--y', `${Math.sin(angle) * radius}px`);
+        tinySparkle.style.setProperty('--x-end', `${Math.cos(angle) * (radius + 20)}px`);
+        tinySparkle.style.setProperty('--y-end', `${Math.sin(angle) * (radius + 20)}px`);
+        document.body.appendChild(tinySparkle);
+        setTimeout(() => tinySparkle.remove(), 1500);
+    }
+
+    for (let i = 0; i < 4; i++) {
+        const lightRay = document.createElement("div");
+        lightRay.classList.add("light-ray");
+        lightRay.style.left = `${centerX}px`;
+        lightRay.style.top = `${centerY}px`;
+        lightRay.style.setProperty('--deg', `${i * 90 + Math.random() * 30}deg`);
+        document.body.appendChild(lightRay);
+        setTimeout(() => lightRay.remove(), 1000);
+    }
+}
+
+function createDriftingPetals() {
+    const roseRect = rose.getBoundingClientRect();
+    const centerX = roseRect.left + roseRect.width / 2;
+    const centerY = roseRect.top + roseRect.height / 2;
+
+    for (let i = 0; i < 6; i++) {
+        const petal = document.createElement("div");
+        petal.classList.add("drifting-petal");
+        petal.style.left = `${centerX}px`;
+        petal.style.top = `${centerY}px`;
+        
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 80 + Math.random() * 50;
+        petal.style.setProperty('--dx', `${Math.cos(angle) * distance}px`);
+        petal.style.setProperty('--dy', `${Math.sin(angle) * distance}px`);
+        petal.style.setProperty('--deg', `${Math.random() * 720 - 360}deg`);
+        
+        petal.style.animationDelay = `${Math.random() * 0.5}s`;
+        document.body.appendChild(petal);
+        setTimeout(() => petal.remove(), 3000);
+    }
+}
+
+function createFlowerRainParticle() {
+  const flower = document.createElement("div");
+  flower.classList.add("flower");
+  flower.style.left = Math.random() * 100 + "vw";
+  flower.style.animationDuration = 4 + Math.random() * 3 + "s";
+  flower.style.animationDelay = -Math.random() * 5 + "s"; 
+  document.body.appendChild(flower);
+  setTimeout(() => flower.remove(), 7000);
+}
+
+function startFlowerRain() {
+    setInterval(createFlowerRainParticle, 800);
+}
+
+// ===================================================================
+// LOGIC CHUYỂN MÀN HÌNH & XÁC THỰC
+// ===================================================================
+
+// Kích hoạt khi nhấn nút 'Mở Thiệp 💌' (Bước 1: Bật Intro & Chuyển màn hình)
+btnReveal.addEventListener('click', () => {
+    playIntroMusic();
+    
+    coverScreen.style.opacity = 0;
+    setTimeout(() => {
+        coverScreen.style.display = 'none';
+        loadingScreen.classList.add('active'); 
+    }, 1000); 
+});
+
+// LOGIC XÁC THỰC KHI NHẤN NÚT "Xác nhận" (Bước 2: Xác thực)
+btnVerify.addEventListener('click', () => {
+    const enteredName = recipientNameInput.value.trim();
+    
+    if (enteredName.toLowerCase() === CORRECT_PASSWORD.toLowerCase()) { // So sánh không phân biệt chữ hoa/thường
+        alert("Xác nhận thành công! Bắt đầu xem thiệp nhé 💐");
+        
+        // Ẩn ô nhập liệu/nút xác nhận
+        recipientNameInput.style.display = 'none';
+        btnVerify.style.display = 'none';
+        
+        // Hiện nút "Bắt đầu" và thay đổi lời dẫn
+        document.getElementById("introText").innerHTML = `
+            Một món quà dành cho Vũ Lan Hương nhân ngày 20/10 nè! 💖<br>
+            <small style="font-size: 18px; font-family: 'Alex Brush'; color: #a82084;">
+                Nhấn nút Bắt đầu để xem điều bất ngờ nhé.
+            </small>`;
+        btnStart.style.display = 'block'; // Hiển thị nút bắt đầu thật sự
+        
+    } else {
+        alert("Tên/Mật khẩu không chính xác. Vui lòng thử lại.");
+        recipientNameInput.value = ""; 
+    }
+});
+
+
+// LOGIC KHI BẤM NÚT "Bắt đầu 💐" (Bước 3: Chạy Animation & Chuyển Nhạc)
+btnStart.addEventListener('click', () => {
+    
+    loadingScreen.style.opacity = 0;
+    rose.classList.add('start-animation');
+    
+    createDriftingPetals(); 
+    
+    let petalDelay = 1.0; 
+    petals.forEach((petal, index) => {
+        petal.classList.add('start-animation');
+        petal.style.animationDelay = `${petalDelay + index * 0.3}s`;
+    });
+
+    card.classList.add('show-card');
+    
+    // 1. DỪNG NHẠC INTRO: Dừng ngay trước khi nhạc chính bật (8 giây)
+    setTimeout(() => {
+        stopIntroMusic(); 
+        createFlowerCompletionEffects();
+    }, 3000); 
+
+    // 2. Kích hoạt hiệu ứng Mây hồng 
+    setTimeout(() => {
+        pinkCloud.classList.add('show-cloud');
+    }, 3500);
+
+    // 3. NHẠC THIỆP BẬT NGAY SAU KHI NHẠC INTRO DỪNG (8.2 giây)
+    setTimeout(() => {
+        playCardMusic(); 
+    }, 5200); 
+
+    // 4. Bắt đầu hiệu ứng Hoa rơi (Rain) 
+    setTimeout(() => {
+        if(loadingScreen) loadingScreen.remove();
+        startFlowerRain();
+    }, 5500); 
+});
+</script>
+</body>
+</html>
